@@ -68,9 +68,9 @@ class MapShader {
         GLES20.glAttachShader(program, fragmentLocation);
         GLES20.glLinkProgram(program);
         aVertex = GLES20.glGetAttribLocation(program, "aVertex");
+        vCoordinate = GLES20.glGetAttribLocation(program, "vCoordinate");
         aMVPMatrix = GLES20.glGetUniformLocation(program, "aMVPMatrix");
         aColor = GLES20.glGetUniformLocation(program, "aColor");
-        vCoordinate = GLES20.glGetAttribLocation(program, "vCoordinate");
     }
 
 }

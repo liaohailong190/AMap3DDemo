@@ -26,8 +26,9 @@ class Cube {
     private float[] vertexPath;
     private final FloatBuffer mVertexBuffer;
 
-    private float[] navigatorBuffer;
-    private final FloatBuffer mNavigatorBuffer;
+    private float[] navigatorVertex;
+    private FloatBuffer mNavigatorVertexBuffer;
+    private FloatBuffer mNavigatorCoordinateBuffer;
 
     private final MapShader mLineShader;//路线
     private final MapShader mNavigatorShader;//导航器
@@ -35,14 +36,13 @@ class Cube {
     private final List<LatLng> mGeodesicPath;
     private final Bitmap mBitmap;
     private final int mTextureId;
-    //https://blog.csdn.net/junzia/article/details/52842816 绘制纹理
 
     private int index = 0;
 
     Cube(Context context, AMap aMap) {
         this.aMap = aMap;
-        mLineShader = new MapShader(context, "vsvertex.shader", "fsvertex.shader");
-        mNavigatorShader = new MapShader(context, "vsplanevertex.shader", "fsplanevertex.shader");
+        mLineShader = new MapShader(context, "line_vertex.shader", "line_fragment.shader");
+        mNavigatorShader = new MapShader(context, "navigator_vertex.shader", "navigator_fragment.shader");
 
         //生成曲线路径
         mGeodesicPath = PathSimplifier.getGeodesicPath(from, to, 300);
@@ -54,10 +54,20 @@ class Cube {
         mVertexBuffer.put(vertexPath).position(0);
 
         //生成导航器顶点坐标和纹理坐标
-        navigatorBuffer = new float[5 * 3];
-        byteBuffer = ByteBuffer.allocateDirect(navigatorBuffer.length * 4);
-        mNavigatorBuffer = byteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
-        mNavigatorBuffer.put(navigatorBuffer).position(0);
+        navigatorVertex = new float[4 * 3];
+        byteBuffer = ByteBuffer.allocateDirect(navigatorVertex.length * 4);
+        mNavigatorVertexBuffer = byteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
+        mNavigatorVertexBuffer.put(navigatorVertex).position(0);
+
+        float[] navigatorCoordinate = new float[]{
+                0.0f, 0.0f,
+                0.0f, 1.0f,
+                1.0f, 1.0f,
+                1.0f, 0.0f,
+        };
+        byteBuffer = ByteBuffer.allocateDirect(navigatorCoordinate.length * 4);
+        mNavigatorCoordinateBuffer = byteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
+        mNavigatorCoordinateBuffer.put(navigatorCoordinate).position(0);
 
         //生成导航器图片
         mBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.plane);
@@ -74,10 +84,15 @@ class Cube {
             GLES20.glGenTextures(1, texture, 0);
             //生成纹理
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture[0]);
+            //设置缩小过滤为使用纹理中坐标最接近的一个像素的颜色作为需要绘制的像素颜色
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+            //设置放大过滤为使用纹理中坐标最接近的若干个颜色，通过加权平均算法得到需要绘制的像素颜色
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            //设置环绕方向S，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            //设置环绕方向T，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+            //根据以上指定的参数，生成一个2D纹理
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, mBitmap, 0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
             mBitmap.recycle();
@@ -124,8 +139,11 @@ class Cube {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
     }
 
+    private float[] nMVP = new float[16];
 
     private void drawNavigator(float[] mvp) {
+        System.arraycopy(mvp, 0, nMVP, 0, nMVP.length);
+
         mNavigatorShader.useProgram();
 
         if (index > mGeodesicPath.size() - 3) {
@@ -133,56 +151,47 @@ class Cube {
         } else {
             index++;
         }
+
         LatLng head = mGeodesicPath.get(index + 1);
-        LatLng foot = mGeodesicPath.get(index);
-
+//        LatLng foot = mGeodesicPath.get(index);
         PointF headPointF = aMap.getProjection().toOpenGLLocation(head);
-        PointF footPointF = aMap.getProjection().toOpenGLLocation(foot);
+//        float rotate = PathSimplifier.getRotate(foot, head);
+//        Matrix.rotateM(nMVP, 0, rotate, 0.0f, 0.0f, 0.0f);
 
-        float centerX = (headPointF.x - footPointF.x) / 2f;
-        float centerY = (headPointF.y - footPointF.y) / 2f;
-        float radius = 2000000;
+        float radius = 400000;
+        //左上角
+        navigatorVertex[0] = headPointF.x - radius;
+        navigatorVertex[1] = headPointF.y + radius;
+        navigatorVertex[2] = 0;
+        //左下角
+        navigatorVertex[3] = headPointF.x - radius;
+        navigatorVertex[4] = headPointF.y - radius;
+        navigatorVertex[5] = 0;
+        //右上角
+        navigatorVertex[9] = headPointF.x + radius;
+        navigatorVertex[10] = headPointF.y + radius;
+        navigatorVertex[11] = 0;
+        //右下角
+        navigatorVertex[6] = headPointF.x + radius;
+        navigatorVertex[7] = headPointF.y - radius;
+        navigatorVertex[8] = 0;
 
-        navigatorBuffer[0] = centerX - radius * 2f;
-        navigatorBuffer[1] = centerY;
-        navigatorBuffer[2] = 0.0f;
-
-        navigatorBuffer[3] = 0.0f;
-        navigatorBuffer[4] = 1.0f;
-
-        navigatorBuffer[5] = centerX;
-        navigatorBuffer[6] = centerY + radius;
-        navigatorBuffer[7] = 0.0f;
-
-        navigatorBuffer[8] = 0.5f;
-        navigatorBuffer[9] = 0.0f;
-
-        navigatorBuffer[10] = centerX;
-        navigatorBuffer[11] = centerY - radius;
-        navigatorBuffer[12] = 0.0f;
-
-        navigatorBuffer[13] = 1.0f;
-        navigatorBuffer[14] = 1.0f;
-
-        //传入导航器顶点坐标
-        mNavigatorBuffer.clear();
-        mNavigatorBuffer.put(navigatorBuffer).position(0);
-
+        mNavigatorVertexBuffer.clear();
+        mNavigatorVertexBuffer.put(navigatorVertex).position(0);
         //绘制导航器
         GLES20.glEnable(GLES20.GL_BLEND);
-//        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-//        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureId);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureId);
         GLES20.glEnableVertexAttribArray(mNavigatorShader.aVertex);
         GLES20.glEnableVertexAttribArray(mNavigatorShader.vCoordinate);
-        GLES20.glVertexAttribPointer(mNavigatorShader.aVertex, 3, GLES20.GL_FLOAT, false, 0, mNavigatorBuffer);
-        GLES20.glVertexAttribPointer(mNavigatorShader.vCoordinate, 2, GLES20.GL_FLOAT, false, 0, mNavigatorBuffer);
-        GLES20.glUniformMatrix4fv(mNavigatorShader.aMVPMatrix, 1, false, mvp, 0);
-        GLES20.glUniform4f(mNavigatorShader.aColor, 1.0f, 0.0f, 0.0f, 1.0f);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+        GLES20.glVertexAttribPointer(mNavigatorShader.aVertex, 3, GLES20.GL_FLOAT, false, 0, mNavigatorVertexBuffer);
+        GLES20.glVertexAttribPointer(mNavigatorShader.vCoordinate, 2, GLES20.GL_FLOAT, false, 0, mNavigatorCoordinateBuffer);
+        GLES20.glUniformMatrix4fv(mNavigatorShader.aMVPMatrix, 1, false, nMVP, 0);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, navigatorVertex.length / 3);
         //绘制完毕后禁止功能
-        GLES20.glDisable(GLES20.GL_BLEND);
         GLES20.glDisableVertexAttribArray(mNavigatorShader.aVertex);
         GLES20.glDisableVertexAttribArray(mNavigatorShader.vCoordinate);
-//        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+        GLES20.glDisable(GLES20.GL_BLEND);
     }
 }
