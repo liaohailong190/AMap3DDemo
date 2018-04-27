@@ -4,18 +4,12 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.View;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.MapView;
 import com.amap.map3d.demo.R;
-import com.amap.map3d.demo.opengl.cube.Cube;
 import com.amap.map3d.demo.opengl.cube.CubeMapRender;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * 介绍地图中开放Opengl接口功能

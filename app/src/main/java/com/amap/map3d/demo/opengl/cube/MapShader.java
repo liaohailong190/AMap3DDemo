@@ -10,14 +10,15 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Created by Administrator on 2018/4/26.
+ * 着色器
+ * Created by WX on 2018/4/26.
  */
 
-public class MapShader {
+class MapShader {
     int aVertex, aMVPMatrix, aColor, vCoordinate;
     private int program;
 
-    public MapShader(Context context, String vsPath, String fsPath) {
+    MapShader(Context context, String vsPath, String fsPath) {
         try {
             vsPath = "shader" + File.separator + vsPath;
             fsPath = "shader" + File.separator + fsPath;
@@ -48,7 +49,7 @@ public class MapShader {
         }
     }
 
-    public void useProgram() {
+    void useProgram() {
         GLES20.glUseProgram(program);
     }
 
