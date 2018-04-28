@@ -1,5 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 .gradle
+.idea/workspace
 .idea
 .local.properties
 .app.iml
