@@ -1,6 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
 .gradle
 .idea/workspace.xml
+.local.properties
+.app.iml
 build/android-profile/profile-2018-04-27-13-09-06-606.json
 build/android-profile/profile-2018-04-27-13-09-06-606.rawproto
 build/android-profile/profile-2018-04-27-13-09-12-426.json
