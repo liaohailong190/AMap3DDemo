@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.opengl.Matrix;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.LatLng;
@@ -153,10 +154,10 @@ class Cube {
         }
 
         LatLng head = mGeodesicPath.get(index + 1);
-//        LatLng foot = mGeodesicPath.get(index);
+        LatLng foot = mGeodesicPath.get(index);
         PointF headPointF = aMap.getProjection().toOpenGLLocation(head);
-//        float rotate = PathSimplifier.getRotate(foot, head);
-//        Matrix.rotateM(nMVP, 0, rotate, 0.0f, 0.0f, 0.0f);
+        float rotate = PathSimplifier.getRotate(foot, head);
+        Matrix.rotateM(nMVP, 0, rotate, headPointF.x, headPointF.y, 1.0f);
 
         float radius = 400000;
         //左上角

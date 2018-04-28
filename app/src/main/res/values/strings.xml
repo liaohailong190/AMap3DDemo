@@ -189,7 +189,7 @@
     <string name="route_share">路径规划分享</string>
     <string name="poi_share">POI分享</string>
     <string name="navi_share">导航分享</string>
-    
+
     <string name="map_create">创建地图</string>
     <string name="map_interactive">地图交互</string>
     <string name="map_overlay">地图上绘制</string>
@@ -269,4 +269,6 @@
     <!-- 脉冲动画相关 -->
     <string name="pulse_title">脉冲动画</string>
 
+    <!-- 航线动画相关-->
+    <string name="air_line_title">航线动画</string>
 </resources>

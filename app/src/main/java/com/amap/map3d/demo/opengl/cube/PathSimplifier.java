@@ -5,6 +5,7 @@ import android.graphics.PathMeasure;
 import android.graphics.PointF;
 import android.util.Log;
 
+import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.LatLng;
 
 import java.math.BigDecimal;
@@ -19,20 +20,23 @@ import java.util.List;
 public class PathSimplifier {
 
 
-    static float getRotate(LatLng startLatLng, LatLng endLatLng) {
+    public static float getRotate(LatLng startLatLng, LatLng endLatLng) {
         if (startLatLng != null && endLatLng != null) {
             double sLat = startLatLng.latitude;
             double eLat = endLatLng.latitude;
             double sLng = startLatLng.longitude;
             double eLng = endLatLng.longitude;
-            float rotate = (float) (Math.atan2(eLng - sLng, eLat - sLat) / 3.141592653589793D * 180.0D);
-            return rotate + 90;
+            return (float) (Math.atan2(eLng - sLng, eLat - sLat) / 3.141592653589793D * 180.0D);
         } else {
             return 0.0F;
         }
     }
 
-    static List<LatLng> getGeodesicPath(LatLng sLatLng, LatLng eLatLng, int pointsNum) {
+    public static float getRotateAngle(float rotate, AMap aMap) {
+        return 360.f - rotate + aMap.getCameraPosition().bearing;
+    }
+
+    public static List<LatLng> getGeodesicPath(LatLng sLatLng, LatLng eLatLng, int pointsNum) {
         ArrayList<LatLng> latLngs = new ArrayList<>();
         latLngs.add(sLatLng);
         latLngs.addAll(getGeodesicPoints(sLatLng, eLatLng, pointsNum));

@@ -12,6 +12,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import com.amap.api.maps.MapsInitializer;
+import com.amap.map3d.demo.airline.AirLineActivity;
 import com.amap.map3d.demo.basic.Animate_CameraActivity;
 import com.amap.map3d.demo.basic.BasicMapActivity;
 import com.amap.map3d.demo.basic.CameraActivity;
@@ -343,7 +344,9 @@ public final class MainActivity extends ListActivity {
             new DemoDetails(R.string.smooth_move_demo, R.string.smooth_move_description, SmoothMoveActivity.class),
 
             //脉冲动画
-            new DemoDetails(R.string.pulse_title, R.string.pulse_title, PulseActivity.class)
+            new DemoDetails(R.string.pulse_title, R.string.pulse_title, PulseActivity.class),
+            //航线动画
+            new DemoDetails(R.string.air_line_title, R.string.air_line_title, AirLineActivity.class)
     };
 
     @Override
@@ -354,6 +357,9 @@ public final class MainActivity extends ListActivity {
         ListAdapter adapter = new CustomArrayAdapter(
                 this.getApplicationContext(), demos);
         setListAdapter(adapter);
+
+        Intent intent = new Intent(this, PulseActivity.class);
+        startActivity(intent);
     }
 
     @Override
