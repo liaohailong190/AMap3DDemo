@@ -79,7 +79,6 @@ public class AirLineActivity extends Activity {
             @Override
             public void run() {
 
-
                 while (true) {
                     if (stop) {
                         return;
@@ -110,7 +109,7 @@ public class AirLineActivity extends Activity {
             //生成分段数量
             int section = count / 10;
             //生成模拟轨迹
-            final List<LatLng> mGeodesicPath = AMapUtil.getGeodesicPath(from, to, count);
+            List<LatLng> path = AMapUtil.getBezierPathLatLng(from, to, count);
 
             airLines = new ArrayList<>();
             int startIndex;
@@ -119,14 +118,14 @@ public class AirLineActivity extends Activity {
             for (int i = 0; i < section; i++) {
                 startIndex = length * i;
                 int endIndex = startIndex + length - skipCount;
-                if (startIndex >= mGeodesicPath.size() - 1) {
+                if (startIndex >= path.size() - 1) {
                     continue;
                 }
-                AirLine airLine = new AirLine(aMap, mGeodesicPath, startIndex, endIndex);
+                AirLine airLine = new AirLine(aMap, path, startIndex, endIndex);
                 airLines.add(airLine);
             }
 
-            airNavigator = new AirNavigator(aMap, planBitmap, mGeodesicPath);
+            airNavigator = new AirNavigator(aMap, planBitmap, path);
         }
 
         @Override

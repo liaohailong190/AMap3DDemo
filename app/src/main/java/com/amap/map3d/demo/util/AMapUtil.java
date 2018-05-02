@@ -5,6 +5,7 @@ package com.amap.map3d.demo.util;
 
 import android.graphics.Path;
 import android.graphics.PathMeasure;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.text.Html;
 import android.text.Spanned;
@@ -12,6 +13,7 @@ import android.util.Log;
 import android.widget.EditText;
 
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.Projection;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.BusPath;
@@ -336,31 +338,35 @@ public class AMapUtil {
         return b1.divide(b2, 18, BigDecimal.ROUND_HALF_EVEN).doubleValue();
     }
 
-    public static List<LatLng> generatePointFByPath(LatLng startPointF, LatLng endPoint, int pointsNum) {
-        ArrayList<LatLng> pointsLists = new ArrayList<>();
-        if (startPointF.longitude == endPoint.longitude) {
-            return pointsLists;
-        }
-        float k = (float) (endPoint.longitude - startPointF.longitude) / (float) (endPoint.latitude - startPointF.latitude);
-        PointF aver = new PointF((float) (endPoint.latitude - startPointF.latitude) / 2.0f, (float) (endPoint.longitude - startPointF.longitude) / 2.0f);
-
-        float endResultY = (float) (endPoint.longitude - startPointF.longitude) / 2 + 900000;
-        float startResultX = (endResultY - aver.y) * (-k) + aver.x;
-        PointF thirdPointF = new PointF(startResultX, endResultY);
+    public static List<LatLng> getBezierPathLatLng(LatLng sLatLng, LatLng eLatLng, int pointsNum) {
+        ArrayList<LatLng> latLngs = new ArrayList<>();
+        LatLng controlPoint = getControlLatLng(sLatLng, eLatLng);
         Path path = new Path();
-        path.reset();
-        path.cubicTo((float) startPointF.latitude, (float) startPointF.longitude, thirdPointF.x, thirdPointF.y, (float) endPoint.latitude, (float) endPoint.longitude);
-        PathMeasure pm = new PathMeasure(path, false);
-        float[] re = new float[2];
-        double length = Math.sqrt((endPoint.latitude - startPointF.latitude) * (endPoint.latitude - startPointF.latitude) + (endPoint.longitude - startPointF.longitude) * (endPoint.longitude - startPointF.longitude));
-
-        Log.i("length", length + "");
-
+        path.moveTo((float) sLatLng.latitude, (float) sLatLng.longitude);
+        path.quadTo((float) controlPoint.latitude, (float) controlPoint.longitude, (float) eLatLng.latitude, (float) eLatLng.longitude);
+        PathMeasure pathMeasure = new PathMeasure(path, false);
+        float length = pathMeasure.getLength();
+        float pos[] = new float[2];
+        float v = length / pointsNum;
         for (int i = 0; i < pointsNum; i++) {
-            pm.getPosTan(i / 200.0f * (float) length, re, null);
-            pointsLists.add(new LatLng(re[0], re[1]));
+            boolean posTan = pathMeasure.getPosTan(i * v, pos, null);
+            if (posTan) {
+                latLngs.add(new LatLng(pos[0], pos[1]));
+            }
         }
-        return pointsLists;
+        return latLngs;
+    }
+
+    private static LatLng getControlLatLng(LatLng sLatLng, LatLng eLatLng) {
+        double a, x, y, X, Y, len;
+        X = (sLatLng.latitude + eLatLng.latitude) / 2;
+        Y = (sLatLng.longitude + eLatLng.longitude) / 2;
+        // 控制贝塞尔曲线曲率
+        len = 0.2 * Math.sqrt(Math.pow((eLatLng.longitude - sLatLng.longitude), 2) + Math.pow((eLatLng.latitude - sLatLng.latitude), 2));
+        a = Math.atan2(eLatLng.longitude - sLatLng.longitude, eLatLng.latitude - sLatLng.latitude);
+        x = X + len * Math.sin(a);
+        y = Y - len * Math.cos(a);
+        return new LatLng((float) x, (float) y);
     }
 
 }
