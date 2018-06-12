@@ -358,7 +358,7 @@ public final class MainActivity extends ListActivity {
                 this.getApplicationContext(), demos);
         setListAdapter(adapter);
 
-        Intent intent = new Intent(this, PulseActivity.class);
+        Intent intent = new Intent(this, GroundOverlayActivity.class);
         startActivity(intent);
     }
 
