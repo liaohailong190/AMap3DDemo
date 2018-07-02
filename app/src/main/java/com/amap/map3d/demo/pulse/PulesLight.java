@@ -13,7 +13,7 @@ import com.amap.api.maps.model.LatLng;
  * Created by LHL on 2018/4/28.
  */
 
-public class PulesLight {
+class PulesLight {
     private final int red;
     private final int green;
     private final int blue;

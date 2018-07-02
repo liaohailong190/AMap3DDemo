@@ -16,7 +16,7 @@ import java.util.List;
  * Created by LHL on 2018/4/28.
  */
 
-public class AirNavigator {
+class AirNavigator {
     private final AMap aMap;
     private final List<LatLng> mTotalAirLine;
     private final Marker mMarker;

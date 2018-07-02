@@ -14,7 +14,7 @@ import java.util.List;
  * Created by LHL on 2018/4/28.
  */
 
-public class AirLine {
+class AirLine {
     private final List<LatLng> mTotalAirLine;
     private int mStartIndex = 0;
     private int mEndIndex = 0;
